@@ -2,7 +2,7 @@
 
 What changed in each release of the Eternity suite, newest first. Every addon shares the release's version.
 
-## Unreleased
+## 0.9.0 (2026-11-14)
 
 ### Added
 - Bags: choose which sort the Sort button uses: Eternity's (the default), which leaves locked items where they are, or Blizzard's, which is instant.

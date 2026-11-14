@@ -34,7 +34,7 @@ ns.firstFile = debugprofilestop and debugprofilestop() or nil
 
 ---@class EternityUI
 EternityUI = {
-    version = "0.8.0",
+    version = "0.9.0",
     addonName = addonName,
     -- For tests and debugging only. Modules must not use it.
     Internal = { ns = ns },
