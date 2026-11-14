@@ -1,0 +1,103 @@
+-- Sort: Eternity's (it leaves locked slots alone) or Blizzard's (windows.sortMode). With
+-- Blizzard's the padlock is greyed out, and clicking it switches back to Eternity's.
+import test, expect from "wowlua:test"
+
+local NAME = "EternityUI_Bags"
+
+local function module()
+    return EternityUI:GetModule(NAME)
+end
+
+--- Presses Sort with both sorts replaced by counters; returns { eternity, blizzard }.
+local function pressSort(grid)
+    local locks = module().locks
+    local ownSort, blizzardSort = locks.Sort, C_Container.SortBags
+    local calls = { eternity = 0, blizzard = 0 }
+    locks.Sort = function()
+        calls.eternity = calls.eternity + 1
+    end
+    C_Container.SortBags = function()
+        calls.blizzard = calls.blizzard + 1
+    end
+    grid.sort:Click()
+    locks.Sort, C_Container.SortBags = ownSort, blizzardSort
+    return calls
+end
+
+@test("Eternity's sort is the default, with or without locked slots")
+local function eternityDefault()
+    OpenAllBags()
+    local grid = module().bags
+    expect(EternityUI.store:Get(NAME, "windows.sortMode")).toBe("eternity")
+    local calls = pressSort(grid)
+    expect(calls.eternity).toBe(1)
+    expect(calls.blizzard).toBe(0)
+    CloseAllWindows()
+end
+
+@test("Blizzard's sort is used when chosen, even with locked slots")
+local function blizzardChosen()
+    local m, store = module(), EternityUI.store
+    store:Set(NAME, "windows.sortMode", "blizzard")
+    OpenAllBags()
+    m.locks.Toggle(0, 1)
+    local calls = pressSort(m.bags)
+    expect(calls.blizzard).toBe(1)
+    expect(calls.eternity).toBe(0)
+    m.locks.Toggle(0, 1)
+    store:Set(NAME, "windows.sortMode", "eternity")
+    CloseAllWindows()
+end
+
+@test("with Blizzard's sort the padlocks are hidden and the padlock button is greyed out")
+local function blizzardGreysLocks()
+    local m, store = module(), EternityUI.store
+    OpenAllBags()
+    local grid = m.bags
+    m.locks.Toggle(0, 1)
+    grid:Refresh()
+    local b = grid.buttons[0] and grid.buttons[0][1]
+    expect(b ~= nil and b.etLock:IsShown()).toBe(true)
+    expect(grid.lock:GetAlpha()).toBe(1)
+    store:Set(NAME, "windows.sortMode", "blizzard")
+    grid:Refresh()
+    grid:UpdateFooter()
+    expect(b.etLock:IsShown()).toBe(false)
+    expect(grid.lock:GetAlpha() < 1).toBe(true)
+    -- The lock is kept for when Eternity's sort comes back.
+    expect(m.locks.Is(0, 1)).toBe(true)
+    store:Set(NAME, "windows.sortMode", "eternity")
+    grid:Refresh()
+    expect(b.etLock:IsShown()).toBe(true)
+    m.locks.Toggle(0, 1)
+    CloseAllWindows()
+end
+
+@test("choosing Blizzard's sort ends lock mode")
+local function blizzardEndsLockMode()
+    local m, store = module(), EternityUI.store
+    OpenAllBags()
+    local grid = m.bags
+    grid.lock:Click()
+    expect(grid.lockMode).toBe(true)
+    store:Set(NAME, "windows.sortMode", "blizzard")
+    grid:UpdateFooter()
+    expect(grid.lockMode).toBe(false)
+    store:Set(NAME, "windows.sortMode", "eternity")
+    CloseAllWindows()
+end
+
+@test("the greyed-out padlock switches to Eternity's sort and starts lock mode")
+local function padlockSwitches()
+    local m, store = module(), EternityUI.store
+    store:Set(NAME, "windows.sortMode", "blizzard")
+    OpenAllBags()
+    local grid = m.bags
+    grid:UpdateFooter()
+    grid.lock:Click()
+    expect(store:Get(NAME, "windows.sortMode")).toBe("eternity")
+    expect(grid.lockMode).toBe(true)
+    expect(grid.lock:GetAlpha()).toBe(1)
+    grid.lock:Click()
+    CloseAllWindows()
+end

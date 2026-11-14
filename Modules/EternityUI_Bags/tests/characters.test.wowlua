@@ -1,0 +1,90 @@
+-- The bags' "..." button opens their options, and forgetting characters lives in the options'
+-- Characters tab instead of a menu.
+import test, expect from "wowlua:test"
+
+local NAME = "EternityUI_Bags"
+
+local function module()
+    return EternityUI:GetModule(NAME)
+end
+
+local function seed(name)
+    local inventory = module().inventory
+    local db = inventory:Bind()
+    local realm = inventory.Me()
+    db.realms[realm] = db.realms[realm] or {}
+    db.realms[realm][name] = { class = "MAGE", money = 0, bags = {}, bank = {}, equipped = {} }
+end
+
+local function characterTab()
+    for _, tab in ipairs(module().tabs or {}) do
+        if tab.key == "characters" then
+            return tab
+        end
+    end
+    return nil
+end
+
+@test("the ... button opens the bags' options on their General tab")
+local function menuOpensOptions()
+    OpenAllBags()
+    local grid = module().bags
+    local opened
+    local original = EternityUI.OpenOptions
+    EternityUI.OpenOptions = function(_, name, tab)
+        opened = { name = name, tab = tab }
+    end
+    grid.menu:Click()
+    EternityUI.OpenOptions = original
+    expect(opened ~= nil).toBe(true)
+    expect(opened.name).toBe(NAME)
+    expect(opened.tab).toBe("general")
+    CloseAllWindows()
+end
+
+@test("the options have a Characters tab, but open on General")
+local function tabDeclared()
+    local tab = characterTab()
+    expect(tab ~= nil).toBe(true)
+    expect(type(tab.build)).toBe("function")
+    expect(module().defaultTab).toBe("general")
+end
+
+@test("the Characters tab lists the other characters and forgets one")
+local function forgetFromTab()
+    seed("Forgettable")
+    seed("Keeper")
+    local parent = CreateFrame("Frame", nil, UIParent)
+    parent:SetSize(500, 400)
+    local height
+    local view = characterTab().build(parent, function(h)
+        height = h
+    end)
+    local names = {}
+    local target
+    for _, row in ipairs(view.rows) do
+        if row:IsShown() and row.char then
+            names[row.char.name] = true
+            if row.char.name == "Forgettable" then
+                target = row
+            end
+        end
+    end
+    expect(names.Forgettable).toBe(true)
+    expect(names.Keeper).toBe(true)
+    expect(height > 0).toBe(true)
+    target.forget:Click()
+    local inventory = module().inventory
+    local realm = inventory.Me()
+    expect(inventory:Bind().realms[realm].Forgettable).toBe(nil)
+    expect(inventory:Bind().realms[realm].Keeper ~= nil).toBe(true)
+    for _, row in ipairs(view.rows) do
+        if row:IsShown() and row.char then
+            expect(row.char.name ~= "Forgettable").toBe(true)
+        end
+    end
+    inventory:Forget(realm, "Keeper")
+    view:Refresh()
+    expect(view.empty:IsShown()).toBe(true)
+    parent:Hide()
+end

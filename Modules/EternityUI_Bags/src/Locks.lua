@@ -1,8 +1,8 @@
 -- EternityUI_Bags: locked slots, and the sort that leaves them alone.
 --   * A locked slot keeps what it holds (or stays empty) when the bags or the bank are sorted.
 --     The locks are this character's, saved in EternityUIBagsDB (char.locks, "bag:slot").
---   * Blizzard's sort (C_Container.SortBags / SortBank) can't skip a slot, so while a window has
---     a locked slot its Sort button runs this one instead: items are moved one at a time with
+--   * Eternity's sort (windows.sortMode, the default): Blizzard's (C_Container.SortBags /
+--     SortBank) can't skip a slot, so this one moves the items one at a time with
 --     C_Container.PickupContainerItem, as a player would, waiting for each move to end. Only
 --     normal bags take part (no keyring, reagent bag, quiver or profession bag), and never in
 --     combat: entering it stops the sort.

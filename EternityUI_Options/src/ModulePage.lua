@@ -363,7 +363,12 @@ local function build(page, frame)
         anchor = button
     end
 
-    page.ShowTab(choices[#choices][1])
+    -- The module's chosen tab first, or the last one.
+    local first = choices[#choices][1]
+    if module.defaultTab and page.tabs[module.defaultTab] then
+        first = module.defaultTab
+    end
+    page.ShowTab(first)
 end
 
 -- What a search should find in an option besides its label.

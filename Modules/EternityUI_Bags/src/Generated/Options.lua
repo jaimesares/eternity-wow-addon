@@ -124,6 +124,35 @@ ns.OptionsSchema = {
                     },
                 },
                 {
+                    id = "sortMode",
+                    type = "select",
+                    default = "eternity",
+                    label = {
+                        enUS = "Sort",
+                        esES = "Ordenar",
+                    },
+                    values = {
+                        {
+                            value = "eternity",
+                            label = {
+                                enUS = "Eternity's (keeps locked items)",
+                                esES = "El de Eternity (respeta los bloqueados)",
+                            },
+                        },
+                        {
+                            value = "blizzard",
+                            label = {
+                                enUS = "Blizzard's",
+                                esES = "El de Blizzard",
+                            },
+                        },
+                    },
+                    description = {
+                        enUS = "Eternity's sort moves the items one by one and leaves locked items where they are. Blizzard's is instant but can't skip a slot, so with it the padlock is greyed out and locked items are moved too (the locks are kept for when you come back).",
+                        esES = "El orden de Eternity mueve los objetos uno a uno y deja los bloqueados donde están. El de Blizzard es instantáneo pero no puede saltarse un hueco, así que con él el candado queda atenuado y los bloqueados también se mueven (los bloqueos se guardan para cuando vuelvas).",
+                    },
+                },
+                {
                     id = "sortReverse",
                     type = "toggle",
                     default = false,
@@ -132,8 +161,8 @@ ns.OptionsSchema = {
                         esES = "Ordenar hacia la última bolsa",
                     },
                     description = {
-                        enUS = "Blizzard's sort fills the bags from the last one. It's the same setting as Blizzard's.",
-                        esES = "El orden de Blizzard llena las bolsas desde la última. Es el mismo ajuste que el de Blizzard.",
+                        enUS = "The sort fills the bags from the last one. With Blizzard's sort it's the same setting as Blizzard's.",
+                        esES = "La ordenación llena las bolsas desde la última. Con el orden de Blizzard es el mismo ajuste que el de Blizzard.",
                     },
                 },
                 {

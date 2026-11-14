@@ -11,6 +11,9 @@ local Schema = ns.Schema
 ---@class EternityUIModuleDefinition
 ---@field schema table? option schema; schema.module must be the module's name
 ---@field needsReload boolean? disabling only takes effect after /reload
+---@field tabs table[]? extra tabs on its options page (see EternityUI_Options/src/ModulePage.lua)
+---@field actions table[]? buttons beside its switch on the options page: { text, onClick }
+---@field defaultTab string? the tab its options page opens on (the last one by default)
 ---@field OnEnable fun(self)?
 ---@field OnDisable fun(self)?
 ---@field OnConfigChanged fun(self, path: string?, value: any)? path nil = anything may have changed
