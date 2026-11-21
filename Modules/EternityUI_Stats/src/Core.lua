@@ -38,7 +38,8 @@ end
 
 local function characterKey()
     local name = UnitName("player") or "?"
-    local realm = GetRealmName and GetRealmName() or "?"
+    -- From the core: Forever's GetRealmName can answer "".
+    local realm = E.RealmName() or "?"
     return name .. "-" .. realm
 end
 

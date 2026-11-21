@@ -171,7 +171,10 @@ end
 local function zone(low, high, answers, kind)
     local byId = {}
     for _, a in ipairs(answers) do
-        byId[a.id] = a
+        -- The interaction distances (duel, follow) have no spell id.
+        if a.id then
+            byId[a.id] = a
+        end
     end
     if kind == "friendly" then
         for _, a in ipairs(answers) do
@@ -201,6 +204,8 @@ local function zone(low, high, answers, kind)
     end
     return "out"
 end
+
+Distance.Zone = zone
 
 --- The distance to a unit: low, high (math.huge when unknown) and its zone, or nil when it can't
 --- be told (no spell for that kind of unit and in combat).

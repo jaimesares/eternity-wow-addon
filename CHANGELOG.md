@@ -2,6 +2,12 @@
 
 What changed in each release of the Eternity suite, newest first. Every addon shares the release's version.
 
+## Unreleased
+
+### Fixed
+- Range: out of combat it failed with "table index is nil" on every refresh (the duel and follow distances have no spell).
+- Bags: every character showed twice in the gold list (and the total counted them twice) since the game started answering an empty realm name. Eternity now keeps the last realm name seen, and the characters, guild banks and Discs keys saved under the empty realm go back to the real one.
+
 ## 0.10.0 (2026-11-20)
 
 ### Added

@@ -1,0 +1,43 @@
+-- EternityUI.RealmName: Forever's GetRealmName can answer "", and then the last name seen is used.
+import test, expect from "wowlua:test"
+
+local function withRealm(value, fn)
+    local real = GetRealmName
+    local fake: any = function()
+        return value
+    end
+    GetRealmName = fake
+    local ok, err = pcall(fn)
+    GetRealmName = real
+    if not ok then
+        error(err)
+    end
+end
+
+@test("a real realm name is returned and remembered")
+local function remembered()
+    EternityUIDB.realm = nil
+    withRealm("Camelot", function()
+        expect(EternityUI.RealmName()).toBe("Camelot")
+    end)
+    expect(EternityUIDB.realm).toBe("Camelot")
+end
+
+@test("an empty name gives the last one seen")
+local function emptyGivesLast()
+    EternityUIDB.realm = "Camelot"
+    withRealm("", function()
+        expect(EternityUI.RealmName("Other")).toBe("Camelot")
+    end)
+end
+
+@test("with nothing seen, the module's guess stands in and is kept")
+local function guess()
+    EternityUIDB.realm = nil
+    withRealm("", function()
+        expect(EternityUI.RealmName()).toBe(nil)
+        expect(EternityUI.RealmName("Camelot")).toBe("Camelot")
+        expect(EternityUI.RealmName()).toBe("Camelot")
+    end)
+    EternityUIDB.realm = nil
+end

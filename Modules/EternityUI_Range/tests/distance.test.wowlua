@@ -49,3 +49,19 @@ local function format()
     expect(D.Format(8, 35)).toBe("8-35")
     expect(D.Format(100, math.huge)).toBe("100+")
 end
+
+@test("the interaction distances (no spell id) don't break the zone")
+local function interactionAnswers()
+    local zone = distance().Distance.Zone
+    -- Out of combat: a spell answer plus the duel (10) and follow (28) distances, which have no id.
+    local answers = {
+        { id = 5176, low = 0, high = 30, result = true },
+        { low = 0, high = 10, result = true },
+        { low = 0, high = 28, result = true },
+    }
+    expect(zone(0, 10, answers, "hostile") ~= nil).toBe(true)
+    expect(zone(0, 10, answers, "friendly")).toBe("in")
+    -- Only the interaction distances answered.
+    local onlyInteract = { { low = 0, high = 10, result = false }, { low = 0, high = 28, result = true } }
+    expect(zone(10, 28, onlyInteract, "hostile")).toBe("out")
+end

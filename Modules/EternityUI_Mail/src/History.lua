@@ -70,7 +70,8 @@ function History.Me()
     if surname and surname ~= "" then
         name = name .. " " .. surname
     end
-    return text(GetRealmName()) or "?", name
+    -- The realm from the core: Forever's GetRealmName can answer "".
+    return EternityUI.RealmName() or "?", name
 end
 
 --- This character's class file (MAGE, PRIEST...).

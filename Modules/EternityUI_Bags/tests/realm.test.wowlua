@@ -1,0 +1,43 @@
+-- Characters saved under an empty realm (GetRealmName answered "") go back to the real one.
+import test, expect from "wowlua:test"
+
+local function inventory()
+    return EternityUI:GetModule("EternityUI_Bags").inventory
+end
+
+@test("the empty realm's characters merge into the real realm, the newer copy winning")
+local function merges()
+    local db = {
+        realms = {
+            [""] = {
+                ["Reke One"] = { money = 200, updated = 20, bank = { "new" }, bankUpdated = 5 },
+                ["Reke Din"] = { money = 0, updated = 21 },
+            },
+            ["Realm"] = {
+                ["Reke One"] = { money = 800, updated = 10, bank = { "old" }, bankUpdated = 9 },
+                ["Reke Farm"] = { money = 50, updated = 8 },
+            },
+        },
+        guilds = { ["/Inception"] = { name = "Inception", updated = 3 } },
+    }
+    db.realms[""]["Reke One"].guild = "/Inception"
+    local moved = inventory().MergeEmptyRealm(db, "Realm")
+    expect(moved).toBe(2)
+    expect(db.realms[""]).toBe(nil)
+    local one = db.realms.Realm["Reke One"]
+    -- The newer scan's gold, the newer visit's bank.
+    expect(one.money).toBe(200)
+    expect(one.bank[1]).toBe("old")
+    expect(one.guild).toBe("Realm/Inception")
+    expect(db.realms.Realm["Reke Din"].money).toBe(0)
+    expect(db.realms.Realm["Reke Farm"].money).toBe(50)
+    expect(db.guilds["/Inception"]).toBe(nil)
+    expect(db.guilds["Realm/Inception"].realm).toBe("Realm")
+end
+
+@test("without a real realm nothing moves")
+local function noRealm()
+    local db = { realms = { [""] = { A = { updated = 1 } } }, guilds = {} }
+    expect(inventory().MergeEmptyRealm(db, "?")).toBe(0)
+    expect(db.realms[""].A ~= nil).toBe(true)
+end

@@ -242,14 +242,21 @@ end
 
 -- Keys per character ---------------------------------------------------------------------------
 
+-- The realm comes from the core: Forever's GetRealmName can answer "", which once saved the keys
+-- under "-Name"; those are the newest, so they take that character's place.
 local function characterKey()
-    return (GetRealmName() or "?") .. "-" .. (UnitName("player") or "?")
+    local name = UnitName("player") or "?"
+    return (EternityUI.RealmName() or "?") .. "-" .. name, "-" .. name
 end
 
 ---@return table<number, string> disc id → key (e.g. "CTRL-Q")
 function Store:Keys()
     local db = self:Bind()
-    local key = characterKey()
+    local key, emptyRealm = characterKey()
+    if key ~= emptyRealm and type(db.characters[emptyRealm]) == "table" then
+        db.characters[key] = db.characters[emptyRealm]
+        db.characters[emptyRealm] = nil
+    end
     local character = db.characters[key]
     if type(character) ~= "table" then
         character = {}

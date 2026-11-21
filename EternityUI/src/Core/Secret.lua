@@ -43,3 +43,37 @@ end
 function Secret.AurasRestricted()
     return C_Secrets ~= nil and C_Secrets.ShouldAurasBeSecret() and true or false
 end
+
+local function realmText(value)
+    if type(value) ~= "string" or Secret.Is(value) or value == "" then
+        return nil
+    end
+    return value
+end
+
+--- The realm's name, for keys of saved data. Forever's GetRealmName can answer "" (seen from
+--- November 2026 on), which saved every character a second time under an empty realm; then the
+--- last name seen is used (EternityUIDB.realm, account wide). guess, a realm a module already
+--- knows (from its own saved data), stands in when none was ever seen, and is kept from then on.
+--- nil while nothing is known.
+---@param guess string?
+---@return string?
+function EternityUI.RealmName(guess)
+    local db = _G.EternityUIDB
+    local realm = realmText(GetRealmName and GetRealmName())
+    if realm then
+        if type(db) == "table" then
+            db.realm = realm
+        end
+        return realm
+    end
+    local known = type(db) == "table" and realmText(db.realm) or nil
+    if known then
+        return known
+    end
+    guess = realmText(guess)
+    if guess and type(db) == "table" then
+        db.realm = guess
+    end
+    return guess
+end

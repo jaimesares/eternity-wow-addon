@@ -42,7 +42,8 @@ function ZoneFilter.State()
         db = { chars = {} }
         _G.EternityUIObjectivesDB = db
     end
-    local name, realm = UnitName("player"), GetRealmName()
+    -- The realm from the core: Forever's GetRealmName can answer "".
+    local name, realm = UnitName("player"), EternityUI.RealmName()
     local key = (not Core.Secret(name) and name or "?") .. "-" .. (realm or "?")
     local state = db.chars[key]
     if type(state) ~= "table" then

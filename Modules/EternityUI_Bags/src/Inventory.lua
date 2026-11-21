@@ -138,8 +138,80 @@ end
 
 -- Database ----------------------------------------------------------------------------------
 
+-- The one realm of the saved characters, if there's only one: the core's guess when the game
+-- answers an empty realm and none was ever seen.
+local function onlyRealm(db)
+    local found
+    for realm in pairs(db and db.realms or {}) do
+        if realm ~= "" and realm ~= "?" then
+            if found then
+                return nil
+            end
+            found = realm
+        end
+    end
+    return found
+end
+
 local function realmName()
-    return GetRealmName() or "?"
+    local db = Inventory.db or _G.EternityUIBagsDB
+    return E.RealmName(onlyRealm(type(db) == "table" and db or nil)) or "?"
+end
+
+-- Two saved copies of one character (or guild bank): the newer scan wins, and the bank of the
+-- newer visit.
+local function newer(a, b)
+    local new, old = a, b
+    if (tonumber(b.updated) or 0) > (tonumber(a.updated) or 0) then
+        new, old = b, a
+    end
+    if (tonumber(old.bankUpdated) or 0) > (tonumber(new.bankUpdated) or 0) then
+        new.bank, new.bankUpdated = old.bank, old.bankUpdated
+    end
+    return new
+end
+
+--- Characters and guild banks saved under an empty realm (GetRealmName answered "") go back to
+--- the real realm, merged with the copies saved there. Returns how many characters it moved.
+---@param db table
+---@param realm string?
+---@return number
+function Inventory.MergeEmptyRealm(db, realm)
+    if not realm or realm == "" or realm == "?" then
+        return 0
+    end
+    local moved = 0
+    local empty = db.realms[""]
+    if type(empty) == "table" then
+        db.realms[realm] = type(db.realms[realm]) == "table" and db.realms[realm] or {}
+        local target = db.realms[realm]
+        for name, char in pairs(empty) do
+            if type(char) == "table" then
+                local other = target[name]
+                target[name] = type(other) == "table" and newer(other, char) or char
+                moved = moved + 1
+            end
+        end
+        db.realms[""] = nil
+    end
+    for key, guild in pairs(db.guilds or {}) do
+        local name = type(key) == "string" and key:match("^/(.+)$")
+        if name and type(guild) == "table" then
+            local real = realm .. "/" .. name
+            guild.realm = realm
+            local other = db.guilds[real]
+            db.guilds[real] = type(other) == "table" and newer(other, guild) or guild
+            db.guilds[key] = nil
+        end
+    end
+    for _, chars in pairs(db.realms) do
+        for _, char in pairs(chars) do
+            if type(char) == "table" and type(char.guild) == "string" and char.guild:sub(1, 1) == "/" then
+                char.guild = realm .. char.guild
+            end
+        end
+    end
+    return moved
 end
 
 -- The whole name: Forever's UnitName gives the first name and the surname apart, and two characters
@@ -168,6 +240,7 @@ function Inventory:Bind()
     db.guilds = type(db.guilds) == "table" and db.guilds or {}
     _G.EternityUIBagsDB = db
     self.db = db
+    Inventory.MergeEmptyRealm(db, realmName())
     return db
 end
 
